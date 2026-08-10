@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  pCloudy Parallel Execution — Pattern 01: By Test Class
+  TestNG parallel suite configuration
+
+  Each <test> block runs on a separate pCloudy device slot.
+  Add or remove <test> blocks to match your pCloudy plan's parallel slot count.
+
+  Usage:
+    mvn test -DsuiteFile=testng-parallel.xml \
+             -DpCloudyUsername=${PCLOUDY_USERNAME} \
+             -DpCloudyApiKey=${PCLOUDY_API_KEY}
+-->
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="pCloudy Parallel Suite" parallel="tests" thread-count="5" verbose="1">
+
+  <!-- Slot 1: Authentication tests -->
+  <test name="Login Tests — Samsung Galaxy S23">
+    <parameter name="deviceManufacturer" value="Samsung"/>
+    <parameter name="platformName" value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <classes>
+      <class name="com.yourapp.tests.LoginTests"/>
+      <class name="com.yourapp.tests.SessionTests"/>
+    </classes>
+  </test>
+
+  <!-- Slot 2: Core transactional tests -->
+  <test name="Checkout Tests — Google Pixel 7">
+    <parameter name="deviceManufacturer" value="Google"/>
+    <parameter name="platformName" value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <classes>
+      <class name="com.yourapp.tests.CheckoutTests"/>
+      <class name="com.yourapp.tests.PaymentTests"/>
+    </classes>
+  </test>
+
+  <!-- Slot 3: User profile and settings -->
+  <test name="Profile Tests — OnePlus 11">
+    <parameter name="deviceManufacturer" value="OnePlus"/>
+    <parameter name="platformName" value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <classes>
+      <class name="com.yourapp.tests.ProfileTests"/>
+      <class name="com.yourapp.tests.SettingsTests"/>
+    </classes>
+  </test>
+
+  <!-- Slot 4: Notifications and alerts -->
+  <test name="Notification Tests — Xiaomi 13">
+    <parameter name="deviceManufacturer" value="Xiaomi"/>
+    <parameter name="platformName" value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <classes>
+      <class name="com.yourapp.tests.NotificationTests"/>
+    </classes>
+  </test>
+
+  <!-- Slot 5: Search and discovery -->
+  <test name="Search Tests — Samsung Galaxy A54">
+    <parameter name="deviceManufacturer" value="Samsung"/>
+    <parameter name="platformName" value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <classes>
+      <class name="com.yourapp.tests.SearchTests"/>
+      <class name="com.yourapp.tests.FilterTests"/>
+    </classes>
+  </test>
+
+</suite>

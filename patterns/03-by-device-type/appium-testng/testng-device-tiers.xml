@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  pCloudy Parallel Execution — Pattern 03: By Device Type
+  TestNG device-tier parallel suite
+
+  All <test> blocks run the SAME test classes — difference is the device.
+  Results report per device, making hardware-specific failures immediately visible.
+
+  Usage:
+    mvn test -DsuiteFile=testng-device-tiers.xml \
+             -DpCloudyUsername=${PCLOUDY_USERNAME} \
+             -DpCloudyApiKey=${PCLOUDY_API_KEY}
+-->
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="pCloudy Device Coverage Suite" parallel="tests" thread-count="4" verbose="1">
+
+  <!-- ── Tier 1: Samsung flagship bucket ──────────────────── -->
+  <test name="Flagship — Samsung Galaxy S23">
+    <parameter name="deviceManufacturer" value="Samsung"/>
+    <parameter name="platformName"    value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <parameter name="deviceTier"      value="flagship"/>
+    <classes>
+      <class name="com.yourapp.tests.SmokeTests"/>
+      <class name="com.yourapp.tests.RegressionTests"/>
+    </classes>
+  </test>
+
+  <!-- ── Tier 2: Google mid-range bucket ──────────────────── -->
+  <test name="Mid-range — Google Pixel 6a">
+    <parameter name="deviceManufacturer" value="Google"/>
+    <parameter name="platformName"    value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <parameter name="deviceTier"      value="mid-range"/>
+    <classes>
+      <class name="com.yourapp.tests.SmokeTests"/>
+      <class name="com.yourapp.tests.RegressionTests"/>
+    </classes>
+  </test>
+
+  <!-- ── Tier 3: Samsung budget bucket ────────────────────── -->
+  <test name="Budget — Samsung Galaxy A14">
+    <parameter name="deviceManufacturer" value="Samsung"/>
+    <parameter name="platformName"    value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <parameter name="deviceTier"      value="budget"/>
+    <classes>
+      <class name="com.yourapp.tests.SmokeTests"/>
+      <class name="com.yourapp.tests.RegressionTests"/>
+    </classes>
+  </test>
+
+  <!-- ── Tier 4: Samsung legacy bucket (compliance floor) ─── -->
+  <test name="Legacy — Android 10 Device">
+    <parameter name="deviceManufacturer" value="Samsung"/>
+    <parameter name="platformName"    value="Android"/>
+    <parameter name="platformVersion" value="10.0"/>
+    <parameter name="deviceTier"      value="legacy"/>
+    <classes>
+      <class name="com.yourapp.tests.SmokeTests"/>
+      <!-- Run only smoke on legacy — full regression may hit API deprecations -->
+    </classes>
+  </test>
+
+</suite>

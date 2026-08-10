@@ -1,0 +1,11 @@
+{
+  "name": "pattern-02-playwright",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test --config=pcloudy.feature.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.54.1"
+  }
+}

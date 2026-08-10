@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  pCloudy Parallel Execution — Pattern 02: By Feature Module
+  TestNG group-based parallel suite configuration
+
+  Each <test> block filters to a specific feature group.
+  Tests MUST be annotated with @Test(groups = {"feature:auth"}) etc.
+
+  Usage:
+    mvn test -DsuiteFile=testng-features.xml \
+             -DpCloudyUsername=${PCLOUDY_USERNAME} \
+             -DpCloudyApiKey=${PCLOUDY_API_KEY}
+-->
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="pCloudy Feature-Parallel Suite" parallel="tests" thread-count="4" verbose="1">
+
+  <!-- ── Slot 1: Authentication + Session ──────────────────── -->
+  <test name="Auth Feature — Samsung Galaxy S23">
+    <parameter name="deviceManufacturer" value="Samsung"/>
+    <parameter name="platformName"    value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <groups>
+      <run>
+        <include name="feature:auth"/>
+      </run>
+    </groups>
+    <packages>
+      <package name="com.yourapp.tests"/>
+    </packages>
+  </test>
+
+  <!-- ── Slot 2: Payments + Transactions ───────────────────── -->
+  <test name="Payments Feature — Google Pixel 7">
+    <parameter name="deviceManufacturer" value="Google"/>
+    <parameter name="platformName"    value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <groups>
+      <run>
+        <include name="feature:payments"/>
+      </run>
+    </groups>
+    <packages>
+      <package name="com.yourapp.tests"/>
+    </packages>
+  </test>
+
+  <!-- ── Slot 3: User Profile + Settings ───────────────────── -->
+  <test name="Profile Feature — OnePlus 11">
+    <parameter name="deviceManufacturer" value="OnePlus"/>
+    <parameter name="platformName"    value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <groups>
+      <run>
+        <include name="feature:profile"/>
+      </run>
+    </groups>
+    <packages>
+      <package name="com.yourapp.tests"/>
+    </packages>
+  </test>
+
+  <!-- ── Slot 4: Search + Discovery ───────────────────────── -->
+  <test name="Search Feature — Xiaomi 13">
+    <parameter name="deviceManufacturer" value="Xiaomi"/>
+    <parameter name="platformName"    value="Android"/>
+    <parameter name="platformVersion" value="13.0"/>
+    <groups>
+      <run>
+        <include name="feature:search"/>
+      </run>
+    </groups>
+    <packages>
+      <package name="com.yourapp.tests"/>
+    </packages>
+  </test>
+
+</suite>

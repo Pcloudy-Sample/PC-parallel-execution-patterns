@@ -1,0 +1,229 @@
+# ============================================================
+# pCloudy Parallel Execution — GitHub Actions Workflow
+# Pattern 04: Round-Robin
+#
+# This workflow runs your tests across N pCloudy device slots
+# in parallel, then aggregates results and checks execution ratio.
+#
+# Required Secrets:
+#   PCLOUDY_USERNAME    — your pCloudy account email
+#   PCLOUDY_API_KEY     — API key from pCloudy dashboard
+#
+# Required Variables (Repository settings → Variables):
+#   PCLOUDY_APP_PATH    — APK path in repo (default fallback: app/build/app-release.apk)
+# ============================================================
+
+name: pCloudy Parallel Execution
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      cloud_host:
+        description: "pCloudy host (without protocol), e.g. device.pcloudy.com"
+        required: false
+        default: "device.pcloudy.com"
+      total_slots:
+        description: "Number of parallel device slots"
+        required: false
+        default: "5"
+      app_path:
+        description: "APK path in repository"
+        required: false
+        default: "app/build/app-release.apk"
+
+env:
+  TOTAL_SHARDS: ${{ github.event.inputs.total_slots || '5' }}
+  PATTERN: round-robin
+  PCLOUDY_HOST: ${{ github.event.inputs.cloud_host || 'device.pcloudy.com' }}
+  PCLOUDY_APP_PATH: ${{ github.event.inputs.app_path || vars.PCLOUDY_APP_PATH || 'app/build/app-release.apk' }}
+
+jobs:
+  # ── Build dynamic shard matrix from total_slots ──────────────
+  prepare-matrix:
+    name: "Prepare Shard Matrix"
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      total: ${{ steps.matrix.outputs.total }}
+
+    steps:
+      - name: Create shard list
+        id: matrix
+        run: |
+          TOTAL=${{ env.TOTAL_SHARDS }}
+          if ! [[ "$TOTAL" =~ ^[0-9]+$ ]] || [ "$TOTAL" -lt 1 ]; then
+            TOTAL=5
+          fi
+          SHARDS=$(seq -s, 1 "$TOTAL")
+          echo "matrix={\"shard\":[${SHARDS}],\"total\":[${TOTAL}]}" >> $GITHUB_OUTPUT
+          echo "total=${TOTAL}" >> $GITHUB_OUTPUT
+
+  # ── Upload app once, share URL across all slots ───────────────
+  setup:
+    name: "Setup — Upload App"
+    runs-on: ubuntu-latest
+    outputs:
+      app_url: ${{ steps.upload.outputs.app_url }}
+      auth_token: ${{ steps.auth.outputs.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate with pCloudy
+        id: auth
+        run: |
+          RESP=$(curl -s -u "${{ secrets.PCLOUDY_USERNAME }}:${{ secrets.PCLOUDY_API_KEY }}" "https://${{ env.PCLOUDY_HOST }}/api/access")
+          TOKEN=$(echo "$RESP" | python3 -c "import sys,json; d=json.load(sys.stdin); print((d.get('result') or {}).get('token') or d.get('token') or '')")
+          if [ -z "$TOKEN" ]; then
+            echo "Failed to fetch pCloudy auth token"
+            echo "$RESP"
+            exit 1
+          fi
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Upload app to pCloudy Drive
+        id: upload
+        run: |
+          APP_PATH="${{ env.PCLOUDY_APP_PATH }}"
+          if [ ! -f "$APP_PATH" ]; then
+            echo "App file not found at: $APP_PATH"
+            exit 1
+          fi
+
+          RESP=$(curl -s -X POST "https://${{ env.PCLOUDY_HOST }}/api/upload_file" \
+            -F "file=@${APP_PATH}" \
+            -F "source_type=raw" \
+            -F "token=${{ steps.auth.outputs.token }}" \
+            -F "filter=all")
+          APP_URL=$(echo "$RESP" | python3 -c "import sys,json; d=json.load(sys.stdin); r=d.get('result') or {}; print(r.get('file') or r.get('name') or d.get('file') or d.get('name') or '')")
+          if [ -z "$APP_URL" ]; then
+            echo "Failed to upload app to pCloudy"
+            echo "$RESP"
+            exit 1
+          fi
+          echo "app_url=$APP_URL" >> $GITHUB_OUTPUT
+          echo "App uploaded: $APP_URL"
+
+  # ── Parallel test execution — one job per slot ────────────────
+  test:
+    name: "Slot ${{ matrix.shard }} of ${{ matrix.total }}"
+    runs-on: ubuntu-latest
+    needs: [prepare-matrix, setup]
+    strategy:
+      fail-fast: false # keep other slots running if one fails
+      matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: patterns/04-round-robin/playwright
+
+      # ── Playwright round-robin (default) ──────────────────────
+      - name: Run Playwright tests (shard ${{ matrix.shard }}/${{ matrix.total }})
+        env:
+          PCLOUDY_USERNAME: ${{ secrets.PCLOUDY_USERNAME }}
+          PCLOUDY_API_KEY: ${{ secrets.PCLOUDY_API_KEY }}
+          PCLOUDY_APP_URL: ${{ needs.setup.outputs.app_url }}
+          SHARD_INDEX: ${{ matrix.shard }}
+          TOTAL_SHARDS: ${{ matrix.total }}
+        run: |
+          npx playwright test \
+              --config=pcloudy.sharded.config.ts \
+            --shard=${{ matrix.shard }}/${{ matrix.total }} \
+            --reporter=junit
+        working-directory: patterns/04-round-robin/playwright
+
+      # ── WebdriverIO round-robin (uncomment to use) ─────────────
+      # - name: Run WebdriverIO tests (shard ${{ matrix.shard }}/${{ matrix.total }})
+      #   if: env.PATTERN == 'round-robin'
+      #   env:
+      #     PCLOUDY_USERNAME: ${{ secrets.PCLOUDY_USERNAME }}
+      #     PCLOUDY_API_KEY:  ${{ secrets.PCLOUDY_API_KEY }}
+      #     PCLOUDY_APP_URL:  ${{ needs.setup.outputs.app_url }}
+      #     SHARD_INDEX:      ${{ matrix.shard }}
+      #     TOTAL_SHARDS:     ${{ matrix.total }}
+      #   run: npx wdio run patterns/04-round-robin/webdriverio/wdio.roundrobin.conf.js
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-shard-${{ matrix.shard }}
+          path: |
+            results/
+            playwright-report/
+          retention-days: 7
+
+  # ── Aggregate results + execution ratio check ─────────────────
+  report:
+    name: "Execution Ratio Report"
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download all shard results
+        uses: actions/download-artifact@v4
+        with:
+          path: all-results/
+
+      - name: Flatten JUnit XML files
+        run: |
+          mkdir -p results/
+          find all-results/ -name "*.xml" -exec cp {} results/ \;
+          echo "Collected $(ls results/*.xml 2>/dev/null | wc -l) XML files"
+
+      - name: Calculate execution ratio
+        id: ratio
+        run: |
+          python tools/execution-ratio-calculator.py \
+            --results ./results \
+            --threshold 90 \
+            --format table
+
+          # Also output JSON for the summary
+          python tools/execution-ratio-calculator.py \
+            --results ./results \
+            --threshold 90 \
+            --format json > ratio.json || true
+
+      - name: Post execution ratio to GitHub Summary
+        if: always()
+        run: |
+          RATIO=$(python3 -c "import json; d=json.load(open('ratio.json')); print(d.get('execution_ratio', 'N/A'))" 2>/dev/null || echo "N/A")
+          echo "## Execution Ratio Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pattern | ${{ env.PATTERN }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Parallel slots | ${{ needs.prepare-matrix.outputs.total }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Execution ratio | ${RATIO}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Target | >90% |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> Full report: [pCloudy Dashboard](https://${{ env.PCLOUDY_HOST }})" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload ratio report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: execution-ratio-report
+          path: ratio.json
+          retention-days: 30

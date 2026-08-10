@@ -1,0 +1,32 @@
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE files
+.idea/
+.vscode/
+.claude/
+*.iml
+*.swp
+*.swo
+
+# Java/Maven build outputs
+**/target/
+**/out/
+**/*.class
+
+# Test and report artifacts
+**/surefire-reports/
+**/failsafe-reports/
+**/test-output/
+**/allure-results/
+**/allure-report/
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+
+# Environment and local overrides
+.env
+.env.*

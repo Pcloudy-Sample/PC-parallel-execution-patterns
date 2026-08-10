@@ -1,0 +1,16 @@
+{
+  "name": "pattern-01-wdio",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "wdio run wdio.parallel.conf.js"
+  },
+  "devDependencies": {
+    "@wdio/cli": "9.9.0",
+    "@wdio/junit-reporter": "9.9.0",
+    "@wdio/local-runner": "9.9.0",
+    "@wdio/mocha-framework": "9.9.0",
+    "@wdio/spec-reporter": "9.9.0",
+    "webdriverio": "9.9.0"
+  }
+}

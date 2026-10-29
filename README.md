@@ -1,9 +1,9 @@
-# pCloudy Parallel Execution Patterns
+# Pcloudy Parallel Execution Patterns
 
-> **Four production-tested patterns for distributing test suites across pCloudy's real device cloud — covering Appium, Selenium, WebdriverIO, and Playwright.**
+> **Four production-tested patterns for distributing test suites across Pcloudy's real device cloud — covering Appium, Selenium, WebdriverIO, and Playwright.**
 
 <p align="center">
-  <a href="https://www.pcloudy.com"><img alt="pCloudy" src="https://img.shields.io/badge/Made%20by-pCloudy-1a73e8"></a>
+  <a href="https://www.pcloudy.com"><img alt="Pcloudy" src="https://img.shields.io/badge/Made%20by-Pcloudy-1a73e8"></a>
   <img alt="Patterns" src="https://img.shields.io/badge/patterns-4-blue">
   <img alt="Frameworks" src="https://img.shields.io/badge/frameworks-Appium%20%7C%20Selenium%20%7C%20WebdriverIO%20%7C%20Playwright-teal">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
@@ -65,12 +65,12 @@ Full decision guide: [docs/choosing-a-pattern.md](docs/choosing-a-pattern.md)
 
 ## Prerequisites
 
-All patterns connect to pCloudy's device cloud. You need:
+All patterns connect to Pcloudy's device cloud. You need:
 
 | Variable | Where to find it |
 |---|---|
-| `PCLOUDY_USERNAME` | Your pCloudy account email |
-| `PCLOUDY_API_KEY` | pCloudy dashboard → Settings → API Key |
+| `PCLOUDY_USERNAME` | Your Pcloudy account email |
+| `PCLOUDY_API_KEY` | Pcloudy dashboard → Settings → API Key |
 
 Store both as secrets in your CI/CD platform. Never hardcode in test files.
 
@@ -130,7 +130,7 @@ The `tools/` folder includes a calculator that reads JUnit XML output and comput
 
 ## Regulated enterprise note
 
-All patterns work with pCloudy's **Lab-in-a-Box** on-premise deployment. Replace `baseUrl` defaults with your internal endpoint:
+All patterns work with Pcloudy's **Lab-in-a-Box** on-premise deployment. Replace `baseUrl` defaults with your internal endpoint:
 
 - Appium patterns: `https://<your-host>/appiumcloud/wd/hub`
 - Selenium patterns: `https://<your-host>/seleniumcloud/wd/hub`
@@ -145,16 +145,16 @@ Three utility scripts in `tools/` that work independently of any pattern:
 
 **`execution-ratio-calculator.py`** — reads JUnit XML reports and outputs your execution ratio. Run after every suite as a baseline.
 
-**`device-allocator.py`** — given your test count and pCloudy slot count, recommends which pattern to use and how to split the suite.
+**`device-allocator.py`** — given your test count and Pcloudy slot count, recommends which pattern to use and how to split the suite.
 
-**`slot-utilisation-report.py`** — parses pCloudy execution logs to show how much time each device slot was active vs idle. Idle time above 20% usually means a different pattern would perform better.
+**`slot-utilisation-report.py`** — parses Pcloudy execution logs to show how much time each device slot was active vs idle. Idle time above 20% usually means a different pattern would perform better.
 
 ---
 
 ## Resources
 
-- [pCloudy documentation](https://docs.pcloudy.com)
-- [pCloudy API reference](https://docs.pcloudy.com/api)
+- [Pcloudy documentation](https://www.pcloudy.com/docs/)
+- [Pcloudy API reference](https://www.pcloudy.com/docs/api-reference)
 ---
 
 ## License
@@ -163,4 +163,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-*Built by [pCloudy](https://www.pcloudy.com) — quality infrastructure for enterprise mobile testing.*
+*Built by [Pcloudy](https://www.pcloudy.com) — quality infrastructure for enterprise mobile testing.*
